@@ -51,6 +51,10 @@ export class TreeNode {
 
     height: number = 0;
 
+    branchLength: number = 0;
+
+    rootDist: number = 0;
+
     parentNode: TreeNode;
     /**
      * Reference to list item.
@@ -432,6 +436,7 @@ class Tree<HostModel extends Model = Model, LevelOption = any> {
             listData.push(dataNode);
 
             const node = new TreeNode(convertOptionIdName(dataNode.name, ''), tree);
+            node.branchLength = dataNode.value; //Temporarily set branch Length
             parentNode
                 ? addChild(node, parentNode)
                 : (tree.root = node);

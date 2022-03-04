@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+
+        <div id="main0"></div>
+
+        <script>
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+                /*
+                var data = {
+                    name: "F",
+                    value: 0,
+                    children: [
+                      {name: "A", value: 0.1},
+                      {name: "B", value: 0.2},
+                      {
+                       name: "E",
+                       value: 0.5,
+                       children: [
+                          {name: "C", value: 0.3},
+                          {name: "D", value: 0.4}
+                       ]
+                     }
+                   ]
+                };
+
+                 */
+                var data = {
+                    "name": "root",
+                    "value": 0,
+                    "children": [
+                        {
+                            "name": "N_2",
+                            "value": 0.1,
+                            "children": [
+                                {
+                                        "name": "N_3",
+                                        "value": 0.01,
+                                        "children": [
+                                        {"name": "N_4", "value": 0.07},
+                                        {"name": "N_5", "value": 0.04,
+                                        "children": [
+                                            {"name": "N_5_1", "value": 0.02},
+                                            {"name": "N_5_2", "value": 0.03}
+                                        ]}
+                                        ]
+                                },
+                                {
+                                    "name": "N_6",
+                                    "value": 0.03
+                                }
+                            ]
+                        },
+                        {
+                            "name": "N_7",
+                            "value": 0.1,
+                            "children": [
+                                {"name": "N_7_1", "value": 0.08},
+                                {"name": "N_7_2", "value": 0.04},
+                                {"name": "N_7_3", "value": 0.045}
+                            ]
+                        },
+                        /*
+                        {
+                            "name": "N_11",
+                            "value": 0.2,
+                            "children": [
+                                {"name": "N_11_1", "value": 0.04},
+                                {"name": "N_11_2", "value": 0.05}
+                            ]
+                        },*/
+                        {
+                            "name": "N_13",
+                            "value": 0.1,
+                            "children": [
+                            {"name": "N_14", "value": 0.06},
+                            {"name": "N_15", "value": 0.05,
+                            "children":[
+                                {"name": "N_15_1", "value": 0.02},
+                                {"name": "N_15_2", "value": 0.01},
+                            ]},
+                            {
+                                "name": "N_16",
+                                "value": 0.012,
+                                "children": [
+                                {"name": "N_16_1", "value": 0.04},
+                                {"name": "N_16_2", "value": 0.06},
+                                {"name": "N_16_3", "value": 0.026},
+                                {"name": "N_16_4", "value": 0.0356}
+                                ]
+                            },
+                            {"name": "N_20", "value": 0.08},
+                            ]
+                        },
+                        {
+                            "name": "N_21",
+                            "value": 0.09,
+                            "children": [
+                            {"name": "N_21_1", "value": 0.04268},
+                            {"name": "N_21_2", "value": 0.03821,
+                            "children":[
+                                {"name": "N_21_2_1", "value": 0.04268},
+                                {"name": "N_21_2_2", "value": 0.04268}
+                            ]},
+                            ]
+                        }]
+                    };
+                var option = {
+                    tooltip: {
+                        trigger: 'item',
+                        triggerOn: 'mousemove'
+                    },
+
+                    series:[
+                        {
+                            type: 'tree',
+                            id: 0,
+                            name: 'Phylogenetic_Tree_Virtual_Root',
+                            data: [data],
+
+                            top: '10%',
+                            left: '8%',
+                            bottom: '22%',
+                            right: '20%',
+
+                            symbolSize: 4,
+                            orient: "TB",
+                            edgeShape: 'polyline',
+                            edgeForkPosition: '0%',
+                            initialTreeDepth: -1,
+
+                            lineStyle: {
+                                width: 3
+                            },
+
+                            label: {
+                                show: true,
+                                backgroundColor: '#fff',
+                                position: 'bottom',
+                                rotate: 0
+                            },
+                            labelLayout:{
+                                hideOverlap: true
+                            },
+                            roam: true,
+                            leaves: {
+                                label: {
+                                    show: true,
+                                    position: 'right',
+                                    verticalAlign: 'middle',
+                                    align: 'center'
+                                }
+                            },
+                            //layout: 'radial',
+                            expandAndCollapse: false,
+                            animationDuration: 550,
+                            animationDurationUpdate: 750
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: 'The corners of the two outermost edges of the subtree should be continuous, not jagged',
+                    option: option,
+                    height: window.innerHeight,
+                    width: window.innerWidth
+                });
+            });
+
+        </script>
+    </body>
+</html>

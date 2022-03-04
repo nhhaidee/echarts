@@ -40,6 +40,142 @@ export default function treeLayout(ecModel: GlobalModel, api: ExtensionAPI) {
     });
 }
 
+/**
+ * The implementation of these functions was originally copied from "d3.js"
+ * <https://github.com/d3/d3-hierarchy/blob/main/src/cluster.js>
+ * with some modifications made for this program.
+ */
+function defaultSeparation(a: TreeLayoutNode, b: TreeLayoutNode) {
+    return a.parentNode === b.parentNode ? 1 : 2;
+}
+
+function meanX(children: TreeLayoutNode) {
+  return children.reduce(meanXReduce, 0) / children.length;
+}
+
+function meanXReduce(x: number, c: TreeLayoutNode) {
+  return x + c.getLayout().x;
+}
+
+function maxY(children: TreeLayoutNode) {
+  return 1 + children.reduce(maxYReduce, 0);
+}
+
+function maxYReduce(y, c: TreeLayoutNode) {
+  return Math.max(y, c.getLayout().y);
+}
+
+function getRightMostLeaf(node: TreeLayoutNode): TreeLayoutNode {
+    let children = node.children;
+    while (children.length > 0 && node.isExpand){
+        node = children[children.length-1];
+        children = node.children;
+    }
+    return node
+}
+
+function getLeftMostLeaf(node: TreeLayoutNode): TreeLayoutNode {
+    let children = node.children;
+    while (children.length > 0 && node.isExpand){
+        node = children[0];
+        children = node.children;
+    }
+    return node
+}
+
+function preOrderTraversalTree(root: TreeLayoutNode, callback: (node: TreeLayoutNode) => void) { // Pre-order traversal Root-Left-Right (DFS)
+    const nodes = [root];
+    const next = [];
+    let node;
+    while (node = nodes.pop()) {
+        next.push(node);
+        if (node.children.length && node.isExpand) {
+            const children = node.children;
+            if (children.length) {
+                for (let i = 0; i < children.length; i++) {
+                    nodes.push(children[i]);
+                }
+            }
+        }
+    }
+    while (node = next.pop()) {
+        callback(node);
+    }
+}
+
+function getRootDist(root: TreeLayoutNode) : []{
+    let rootDists = [];
+    const nodes = [root];
+    let node;
+    while (node = nodes.pop()){
+        if (node.children.length > 0 && node.isExpand){
+            const children = node.children;
+            if (children.length) {
+                for (let i = 0; i < children.length; i++) {
+                    children[i].rootDist = children[i].parentNode.rootDist + children[i].branchLength;
+                    rootDists.push(children[i].rootDist);
+                    nodes.push(children[i]);
+                }
+            }
+        }
+    }
+    return rootDists
+}
+
+function scaleBranchLength(nodeDist: number, minScale: number, maxScale: number, min: number, max: number): number {
+  return (maxScale - minScale) * (nodeDist - min) / (max - min) + minScale;
+}
+
+function commonLayout(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
+    const layoutInfo = getViewRect(seriesModel, api);
+    seriesModel.layoutInfo = layoutInfo;
+    const layout = seriesModel.get('layout');
+    let width = layoutInfo.width;
+    let height = layoutInfo.height;
+
+    let separation = defaultSeparation;
+    let coorX, coorY, coorYScale, coorXScale;
+    let previousNode: TreeLayoutNode, x = 0;
+
+    const virtualRoot = seriesModel.getData().tree.root as TreeLayoutNode;
+    const realRoot = virtualRoot.children[0];
+    preOrderTraversalTree(realRoot, function (node: TreeLayoutNode){
+        let children = node.children;
+        if (children.length > 0){
+            coorX = meanX(children);
+            coorY = maxY(children);
+            node.setLayout({x: coorX, y: coorY}, true)
+        }else{
+            coorX = previousNode ? x += separation(node, previousNode) : 0;
+            coorY = 0;
+            node.setLayout({x: coorX, y: coorY}, true)
+            previousNode = node;
+        }
+    })
+    let leftMostLeaf = getLeftMostLeaf(realRoot);
+    let rightMostLeaf = getRightMostLeaf(realRoot);
+    let x0 = leftMostLeaf.getLayout().x - separation(leftMostLeaf, rightMostLeaf)/2;
+    let x1 = rightMostLeaf.getLayout().x + separation(rightMostLeaf, leftMostLeaf)/2;
+    let maxDist = getRootDist(realRoot).reduce(function (a,b){
+        return Math.max(a,b)
+    });
+    const orient = seriesModel.getOrient();
+    preOrderTraversalTree(realRoot, function (node: TreeLayoutNode){
+        if (orient === "TB"){
+            coorX = (node.getLayout().x - x0) / (x1 - x0) * width;
+            coorY = (1 - (realRoot.getLayout().y ? node.getLayout().y / realRoot.getLayout().y : 1)) * height;
+            coorYScale = scaleBranchLength(node.rootDist, 0, height, 0, maxDist);
+            node.setLayout({x: coorX, y: coorYScale}, true);
+        }else if (orient === "LR"){
+            coorX = (1 - (realRoot.getLayout().y ? node.getLayout().y / realRoot.getLayout().y : 1)) * width;
+            coorY = (node.getLayout().x - x0) / (x1 - x0) * height;
+            coorXScale = scaleBranchLength(node.rootDist, 0, width, 0, maxDist);
+            node.setLayout({x: coorXScale, y: coorY}, true);
+        }
+    })
+}
+
+/*
 function commonLayout(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
     const layoutInfo = getViewRect(seriesModel, api);
     seriesModel.layoutInfo = layoutInfo;
@@ -130,3 +266,4 @@ function commonLayout(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
         }
     }
 }
+ */
