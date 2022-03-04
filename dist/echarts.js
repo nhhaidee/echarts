@@ -41972,7 +41972,7 @@ var Tree = class {
       dimMax = Math.max(dimMax, isArray(value) ? value.length : 1);
       listData.push(dataNode);
       const node = new TreeNode(convertOptionIdName(dataNode.name, ""), tree);
-      node.branchLength = dataNode.value;
+      node.branchLength = parseFloat(dataNode.value);
       parentNode2 ? addChild(node, parentNode2) : tree.root = node;
       tree._nodes.push(node);
       const children = dataNode.children;
@@ -42181,13 +42181,15 @@ function treeLayout(ecModel, api2) {
 function defaultSeparation(a, b) {
   return a.parentNode === b.parentNode ? 1 : 2;
 }
-function meanX(children) {
+function meanX(node) {
+  let children = node.children;
   return children.reduce(meanXReduce, 0) / children.length;
 }
 function meanXReduce(x, c) {
   return x + c.getLayout().x;
 }
-function maxY(children) {
+function maxY(node) {
+  let children = node.children;
   return 1 + children.reduce(maxYReduce, 0);
 }
 function maxYReduce(y, c) {
@@ -42261,10 +42263,9 @@ function commonLayout(seriesModel, api2) {
   const virtualRoot = seriesModel.getData().tree.root;
   const realRoot = virtualRoot.children[0];
   preOrderTraversalTree(realRoot, function(node) {
-    let children = node.children;
-    if (children.length > 0) {
-      coorX = meanX(children);
-      coorY = maxY(children);
+    if (node.children.length > 0) {
+      coorX = meanX(node);
+      coorY = maxY(node);
       node.setLayout({x: coorX, y: coorY}, true);
     } else {
       coorX = previousNode ? x += separation(node, previousNode) : 0;

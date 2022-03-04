@@ -436,7 +436,7 @@ class Tree<HostModel extends Model = Model, LevelOption = any> {
             listData.push(dataNode);
 
             const node = new TreeNode(convertOptionIdName(dataNode.name, ''), tree);
-            node.branchLength = dataNode.value; //Temporarily set branch Length
+            node.branchLength = parseFloat(<string>dataNode.value);
             parentNode
                 ? addChild(node, parentNode)
                 : (tree.root = node);

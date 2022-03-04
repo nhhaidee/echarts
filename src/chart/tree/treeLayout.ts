@@ -49,26 +49,28 @@ function defaultSeparation(a: TreeLayoutNode, b: TreeLayoutNode) {
     return a.parentNode === b.parentNode ? 1 : 2;
 }
 
-function meanX(children: TreeLayoutNode) {
-  return children.reduce(meanXReduce, 0) / children.length;
+function meanX(node: TreeLayoutNode) {
+    let children = node.children
+    return children.reduce(meanXReduce, 0) / children.length;
 }
 
 function meanXReduce(x: number, c: TreeLayoutNode) {
-  return x + c.getLayout().x;
+    return x + c.getLayout().x;
 }
 
-function maxY(children: TreeLayoutNode) {
-  return 1 + children.reduce(maxYReduce, 0);
+function maxY(node: TreeLayoutNode) {
+    let children = node.children;
+    return 1 + children.reduce(maxYReduce, 0);
 }
 
-function maxYReduce(y, c: TreeLayoutNode) {
-  return Math.max(y, c.getLayout().y);
+function maxYReduce(y: number, c: TreeLayoutNode): number {
+    return Math.max(y, c.getLayout().y);
 }
 
 function getRightMostLeaf(node: TreeLayoutNode): TreeLayoutNode {
     let children = node.children;
-    while (children.length > 0 && node.isExpand){
-        node = children[children.length-1];
+    while (children.length > 0 && node.isExpand) {
+        node = children[children.length - 1];
         children = node.children;
     }
     return node
@@ -76,7 +78,7 @@ function getRightMostLeaf(node: TreeLayoutNode): TreeLayoutNode {
 
 function getLeftMostLeaf(node: TreeLayoutNode): TreeLayoutNode {
     let children = node.children;
-    while (children.length > 0 && node.isExpand){
+    while (children.length > 0 && node.isExpand) {
         node = children[0];
         children = node.children;
     }
@@ -103,7 +105,7 @@ function preOrderTraversalTree(root: TreeLayoutNode, callback: (node: TreeLayout
     }
 }
 
-function getRootDist(root: TreeLayoutNode) : []{
+function getRootDist(root: TreeLayoutNode) : number[]{
     let rootDists = [];
     const nodes = [root];
     let node;
@@ -140,10 +142,9 @@ function commonLayout(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
     const virtualRoot = seriesModel.getData().tree.root as TreeLayoutNode;
     const realRoot = virtualRoot.children[0];
     preOrderTraversalTree(realRoot, function (node: TreeLayoutNode){
-        let children = node.children;
-        if (children.length > 0){
-            coorX = meanX(children);
-            coorY = maxY(children);
+        if (node.children.length > 0){
+            coorX = meanX(node);
+            coorY = maxY(node);
             node.setLayout({x: coorX, y: coorY}, true)
         }else{
             coorX = previousNode ? x += separation(node, previousNode) : 0;
@@ -156,7 +157,7 @@ function commonLayout(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
     let rightMostLeaf = getRightMostLeaf(realRoot);
     let x0 = leftMostLeaf.getLayout().x - separation(leftMostLeaf, rightMostLeaf)/2;
     let x1 = rightMostLeaf.getLayout().x + separation(rightMostLeaf, leftMostLeaf)/2;
-    let maxDist = getRootDist(realRoot).reduce(function (a,b){
+    let maxDist = getRootDist(realRoot).reduce(function (a: number,b:number) :number{
         return Math.max(a,b)
     });
     const orient = seriesModel.getOrient();
